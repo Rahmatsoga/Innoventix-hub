@@ -41,7 +41,7 @@ export default async function handler(
         })
         const page = await browser.newPage()
 
-        await page.setContent(fullHtml, { waitUntil: 'networkidle0' })
+        await page.setContent(fullHtml, { waitUntil: 'networkidle0' as any })
 
         const pdf = await page.pdf({
             format: 'A4',

@@ -90,7 +90,7 @@ export default async function handler(
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         })
         const page = await browser.newPage()
-        await page.setContent(fullHtml, { waitUntil: 'networkidle0' })
+        await page.setContent(fullHtml, { waitUntil: 'networkidle0' as any })
 
         const pdfBuffer = await page.pdf({
             format: 'A4',
