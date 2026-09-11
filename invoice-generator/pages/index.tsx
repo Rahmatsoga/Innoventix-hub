@@ -189,12 +189,6 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex flex-wrap gap-3">
                         <Link
-                            href="/create-invoice"
-                            className="px-5 py-2.5 bg-white text-blue-700 hover:bg-blue-50 font-semibold text-sm rounded-xl shadow transition flex items-center space-x-2"
-                        >
-                            <span>+ Create Invoice</span>
-                        </Link>
-                        <Link
                             href="/clients"
                             className="px-5 py-2.5 bg-blue-500/30 hover:bg-blue-500/40 text-white font-semibold text-sm rounded-xl border border-white/20 transition flex items-center space-x-2"
                         >
