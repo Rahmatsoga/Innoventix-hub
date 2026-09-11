@@ -49,6 +49,7 @@ export default async function handler(
 
         // 2. Call emailService to send email with formatted HTML invoice details
         const emailData = {
+            invoiceId: invoice.invoice_id,
             invoiceNumber: invoice.invoice_number,
             clientName: client.name || 'Valued Client',
             clientEmail: clientEmail,

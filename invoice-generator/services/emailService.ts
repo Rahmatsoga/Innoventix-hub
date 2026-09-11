@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
 })
 
 export interface InvoiceEmailData {
+  invoiceId?: string
   invoiceNumber: string
   clientName: string
   clientEmail: string
@@ -68,7 +69,7 @@ export const emailService = {
     reminderType?: 'initial' | 'reminder_1' | 'overdue' | 'final'
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app'
       const pdfResponse = await axios.post(
         `${appUrl}/api/generate-pdf`,
         invoiceData,
@@ -78,17 +79,17 @@ export const emailService = {
 
       if (reminderType === 'reminder_1') {
         return this.sendDueReminderEmail(
-          { ...invoiceData, clientEmail: clientEmail },
+          { ...invoiceData, invoiceId, clientEmail: clientEmail },
           pdfBuffer
         )
       } else if (reminderType === 'overdue' || reminderType === 'final') {
         return this.sendOverdueEmail(
-          { ...invoiceData, clientEmail: clientEmail },
+          { ...invoiceData, invoiceId, clientEmail: clientEmail },
           pdfBuffer
         )
       } else {
         return this.sendInvoiceEmail(
-          { ...invoiceData, clientEmail: clientEmail },
+          { ...invoiceData, invoiceId, clientEmail: clientEmail },
           pdfBuffer
         )
       }
@@ -194,6 +195,9 @@ export const emailService = {
    * Email template for initial invoice
    */
   getInvoiceEmailTemplate(data: InvoiceEmailData): string {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app'
+    const invoiceId = data.invoiceId || data.invoiceNumber
+
     return `
       <!DOCTYPE html>
       <html>
@@ -216,7 +220,15 @@ export const emailService = {
 
             <div class="section">
               <p>Dear ${data.clientName},</p>
-              <p>Your invoice is ready. Please find it attached.</p>
+              <p>Your invoice is ready. You can view, print, or download your PDF invoice directly using the button below:</p>
+            </div>
+
+            <div style="margin: 24px 0; text-align: left;">
+              <a href="${appUrl}/invoice/${invoiceId}?print=true"
+                 target="_blank"
+                 style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                📄 View & Download PDF Invoice
+              </a>
             </div>
 
             <div class="section">
