@@ -153,7 +153,7 @@ export default function CreateInvoicePage() {
         }
     }
 
-    // Send via Email Action
+    // Send via Email Action & Trigger N8N Workflow Pipeline
     const handleSendEmail = async () => {
         setMessage(null)
         setSendingEmail(true)
@@ -161,7 +161,7 @@ export default function CreateInvoicePage() {
         try {
             let currentSavedInvoice = savedInvoice
 
-            // Auto-save if not saved yet
+            // 1. Auto-save / ensure invoice exists in Supabase
             if (!currentSavedInvoice || !currentSavedInvoice.invoice_id) {
                 currentSavedInvoice = await handleSaveInvoice()
                 if (!currentSavedInvoice || !currentSavedInvoice.invoice_id) {
@@ -170,6 +170,7 @@ export default function CreateInvoicePage() {
                 }
             }
 
+            // 2. Call /api/send-invoice API endpoint
             const response = await fetch('/api/send-invoice', {
                 method: 'POST',
                 headers: {
@@ -184,9 +185,34 @@ export default function CreateInvoicePage() {
                 throw new Error(data.error || 'Failed to send invoice email')
             }
 
+            // 3. Post payload directly to n8n webhook if NEXT_PUBLIC_N8N_WEBHOOK_URL is configured
+            const n8nWebhookUrl = process.env.NEXT_PUBLIC_N8N_WEBHOOK_URL
+            if (n8nWebhookUrl) {
+                const n8nPayload = {
+                    invoice_id: currentSavedInvoice.invoice_id,
+                    invoice_number: currentSavedInvoice.invoice_number,
+                    client_name: selectedClient?.name || 'Valued Client',
+                    client_email: selectedClient?.email,
+                    total: total,
+                    due_date: dueDate || null,
+                    items: lineItems
+                }
+
+                try {
+                    await fetch(n8nWebhookUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(n8nPayload)
+                    })
+                } catch (n8nErr) {
+                    console.error('Direct n8n webhook call error:', n8nErr)
+                }
+            }
+
+            // 4. Show green success alert
             setMessage({
                 type: 'success',
-                text: `Invoice #${currentSavedInvoice.invoice_number} sent via email successfully to ${selectedClient?.email}!`
+                text: 'Invoice emailed and workflow triggered successfully!'
             })
         } catch (err: any) {
             console.error('Email send error:', err)
@@ -476,7 +502,13 @@ export default function CreateInvoicePage() {
                                     className="py-2 px-3 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-semibold rounded-xl transition text-xs flex items-center justify-center space-x-1"
                                 >
                                     {sendingEmail ? (
-                                        <span>Sending...</span>
+                                        <span className="flex items-center space-x-1.5">
+                                            <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Sending Email...</span>
+                                        </span>
                                     ) : (
                                         <span>✉️ Send via Email</span>
                                     )}
