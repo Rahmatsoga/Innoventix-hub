@@ -26,21 +26,23 @@ export const emailService = {
    */
   async sendInvoiceEmail(
     invoiceData: InvoiceEmailData,
-    pdfBuffer: Buffer
+    pdfBuffer?: Buffer
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
+      const attachments = pdfBuffer ? [
+        {
+          filename: `Invoice-${invoiceData.invoiceNumber}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ] : []
+
       const result = await transporter.sendMail({
         from: `"Innoventix Hub" <${process.env.GMAIL_USER}>`,
         to: invoiceData.clientEmail,
         subject: `Invoice ${invoiceData.invoiceNumber} from Innoventix Hub`,
         html: this.getInvoiceEmailTemplate(invoiceData),
-        attachments: [
-          {
-            filename: `Invoice-${invoiceData.invoiceNumber}.pdf`,
-            content: pdfBuffer,
-            contentType: 'application/pdf'
-          }
-        ]
+        attachments
       })
 
       return {

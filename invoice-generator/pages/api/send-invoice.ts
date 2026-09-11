@@ -1,8 +1,4 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import { getPuppeteerBrowser } from '@/lib/puppeteer'
-import React from 'react'
-import { renderToString } from 'react-dom/server'
-import { InvoiceTemplate } from '@/components/InvoiceTemplate'
 import { invoiceService } from '@/services/invoiceService'
 import { emailService } from '@/services/emailService'
 
@@ -46,63 +42,8 @@ export default async function handler(
         const subtotal = Number(invoice.subtotal || 0)
         const tax = Number(invoice.tax || 0)
         const total = Number(invoice.amount || subtotal + tax)
-        const taxRate = subtotal > 0 ? (tax / subtotal) * 100 : 0
-        const invoiceDate = invoice.created_at
-            ? new Date(invoice.created_at).toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0]
 
-        const templateProps = {
-            invoiceNumber: invoice.invoice_number,
-            date: invoiceDate,
-            dueDate: invoice.due_date ? new Date(invoice.due_date).toISOString().split('T')[0] : undefined,
-            clientName: client.name || 'Valued Client',
-            clientCompany: client.company,
-            clientEmail: client.email,
-            clientAddress: client.address,
-            lineItems,
-            subtotal,
-            tax,
-            total,
-            taxRate,
-            notes: invoice.notes
-        }
-
-        // 2. Generate HTML & PDF attachment using Puppeteer
-        const htmlContent = renderToString(
-            React.createElement(InvoiceTemplate, templateProps)
-        )
-
-        const fullHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body class="bg-white">
-          ${htmlContent}
-        </body>
-      </html>
-    `
-
-        const browser = await getPuppeteerBrowser()
-        const page = await browser.newPage()
-        await page.setContent(fullHtml, { waitUntil: 'domcontentloaded' })
-
-        const pdfBuffer = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-            margin: {
-                top: '20px',
-                right: '20px',
-                bottom: '20px',
-                left: '20px'
-            }
-        })
-
-        await browser.close()
-
-        // 3. Call emailService to send email with PDF attachment
+        // 2. Call emailService to send email with formatted HTML invoice details
         const emailData = {
             invoiceNumber: invoice.invoice_number,
             clientName: client.name || 'Valued Client',
@@ -113,7 +54,7 @@ export default async function handler(
             lineItems: lineItems
         }
 
-        const emailResult = await emailService.sendInvoiceEmail(emailData, Buffer.from(pdfBuffer))
+        const emailResult = await emailService.sendInvoiceEmail(emailData)
 
         if (!emailResult.success) {
             return res.status(500).json({
@@ -121,13 +62,13 @@ export default async function handler(
             })
         }
 
-        // 4. Update invoice status to 'Sent' and record sent_at timestamp
+        // 3. Update invoice status to 'Sent' and record sent_at timestamp
         const updatedInvoice = await invoiceService.updateInvoice(invoiceId, {
             status: 'Sent',
             sent_at: new Date().toISOString()
         })
 
-        // 5. Return JSON success response
+        // 4. Return JSON success response
         return res.status(200).json({
             success: true,
             message: 'Invoice sent successfully',

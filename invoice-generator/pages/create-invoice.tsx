@@ -122,59 +122,22 @@ export default function CreateInvoicePage() {
         }
     }
 
-    // Download PDF Action
+    // Download / Print PDF Action
     const handleDownloadPDF = async () => {
         setMessage(null)
         setDownloadingPdf(true)
 
         try {
-            const invoiceNumberToUse = savedInvoice?.invoice_number || 'draft'
-            const pdfProps = {
-                invoiceNumber: invoiceNumberToUse,
-                date,
-                dueDate,
-                clientName: selectedClient?.name,
-                clientCompany: selectedClient?.company,
-                clientEmail: selectedClient?.email,
-                clientAddress: selectedClient?.address,
-                lineItems,
-                subtotal,
-                tax,
-                total,
-                taxRate,
-                notes,
-                paymentTerms,
-                bankDetails
+            if (savedInvoice?.invoice_id) {
+                window.open(`/invoice/${savedInvoice.invoice_id}?print=true`, '_blank')
+                setMessage({ type: 'success', text: 'Opened print / PDF view in new window.' })
+            } else {
+                window.print()
+                setMessage({ type: 'success', text: 'Opened print dialog for invoice preview.' })
             }
-
-            const response = await fetch('/api/generate-pdf', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(pdfProps)
-            })
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}))
-                throw new Error(errData.error || 'Failed to generate PDF')
-            }
-
-            const blob = await response.blob()
-            const url = window.URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `Invoice-${invoiceNumberToUse}.pdf`
-            document.body.appendChild(a)
-            a.click()
-            window.URL.revokeObjectURL(url)
-            document.body.removeChild(a)
-
-            setMessage({ type: 'success', text: 'PDF downloaded successfully!' })
         } catch (err: any) {
-            console.error('PDF download error, launching print dialog fallback:', err)
+            console.error('Print preview error:', err)
             window.print()
-            setMessage({ type: 'success', text: 'Opened print dialog for invoice export.' })
         } finally {
             setDownloadingPdf(false)
         }

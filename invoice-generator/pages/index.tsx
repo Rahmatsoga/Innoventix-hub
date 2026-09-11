@@ -91,70 +91,9 @@ export default function DashboardPage() {
     }
 
     // Row Action: Download PDF
-    const handleDownloadPDF = async (inv: Invoice) => {
+    const handleDownloadPDF = (inv: Invoice) => {
         if (!inv.invoice_id) return
-        setActionLoading(prev => ({ ...prev, [inv.invoice_id!]: 'pdf' }))
-        setMessage(null)
-
-        try {
-            let lineItems = []
-            if (inv.line_items) {
-                lineItems = typeof inv.line_items === 'string'
-                    ? JSON.parse(inv.line_items)
-                    : inv.line_items
-            }
-
-            const subtotal = Number(inv.subtotal || 0)
-            const tax = Number(inv.tax || 0)
-            const total = Number(inv.amount || subtotal + tax)
-            const taxRate = subtotal > 0 ? (tax / subtotal) * 100 : 0
-            const client = (inv as any).clients || {}
-
-            const pdfProps = {
-                invoiceNumber: inv.invoice_number,
-                date: inv.sent_at ? new Date(inv.sent_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : undefined,
-                clientName: client.name || 'Valued Client',
-                clientCompany: client.company,
-                clientEmail: client.email,
-                clientAddress: client.address,
-                lineItems,
-                subtotal,
-                tax,
-                total,
-                taxRate,
-                notes: inv.notes
-            }
-
-            const response = await fetch('/api/generate-pdf', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(pdfProps)
-            })
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}))
-                throw new Error(errData.error || 'Failed to generate PDF')
-            }
-
-            const blob = await response.blob()
-            const url = window.URL.createObjectURL(blob)
-            const a = document.createElement('a')
-            a.href = url
-            a.download = `Invoice-${inv.invoice_number}.pdf`
-            document.body.appendChild(a)
-            a.click()
-            window.URL.revokeObjectURL(url)
-            document.body.removeChild(a)
-
-            setMessage({ type: 'success', text: `Downloaded PDF for #${inv.invoice_number}` })
-        } catch (err: any) {
-            console.error('Error downloading PDF, launching print dialog fallback:', err)
-            window.print()
-            setMessage({ type: 'success', text: `Opened print dialog for #${inv.invoice_number}` })
-        } finally {
-            setActionLoading(prev => ({ ...prev, [inv.invoice_id!]: null }))
-        }
+        window.open(`/invoice/${inv.invoice_id}?print=true`, '_blank')
     }
 
     // Row Action: Send Email
