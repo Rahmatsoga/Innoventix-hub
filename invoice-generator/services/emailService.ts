@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer'
 import axios from 'axios'
+import { generateInvoicePdfBuffer } from '@/lib/pdfGenerator'
 
 // Configure Gmail transporter
 const transporter = nodemailer.createTransport({
@@ -23,13 +24,21 @@ export interface InvoiceEmailData {
 
 export const emailService = {
   /**
-   * Send invoice email with provided PDF buffer
+   * Send invoice email with provided PDF buffer (or auto-generates buffer using pdf-lib)
    */
   async sendInvoiceEmail(
     invoiceData: InvoiceEmailData,
     pdfBuffer?: Buffer
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
+      if (!pdfBuffer) {
+        try {
+          pdfBuffer = await generateInvoicePdfBuffer(invoiceData)
+        } catch (pdfErr) {
+          console.error('Failed to auto-generate PDF attachment buffer:', pdfErr)
+        }
+      }
+
       const attachments = pdfBuffer ? [
         {
           filename: `Invoice-${invoiceData.invoiceNumber}.pdf`,
@@ -267,6 +276,8 @@ export const emailService = {
     type: 'reminder_1' | 'overdue',
     reminderCount: number = 1
   ): string {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app'
+    const invoiceId = data.invoiceId || data.invoiceNumber
     const isOverdue = type === 'overdue'
     const heading = isOverdue 
       ? `⚠️ Invoice ${data.invoiceNumber} is OVERDUE`
@@ -297,6 +308,14 @@ export const emailService = {
                 ? `Invoice ${data.invoiceNumber} is now overdue and requires immediate payment.`
                 : `This is a friendly reminder that invoice ${data.invoiceNumber} is due in 8 hours.`
               }</p>
+            </div>
+
+            <div style="margin: 24px 0; text-align: left;">
+              <a href="${appUrl}/invoice/${invoiceId}?print=true"
+                 target="_blank"
+                 style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                📄 View & Download PDF Invoice
+              </a>
             </div>
 
             <div class="section">

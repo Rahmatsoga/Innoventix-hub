@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { invoiceService } from '@/services/invoiceService'
 import { emailService } from '@/services/emailService'
+import { generateInvoicePdfBuffer } from '@/lib/pdfGenerator'
 import axios from 'axios'
 
 export default async function handler(
@@ -59,7 +60,15 @@ export default async function handler(
             lineItems: lineItems
         }
 
-        const emailResult = await emailService.sendInvoiceEmail(emailData)
+        // Generate PDF Buffer using pdf-lib (zero Chromium dependencies)
+        let pdfBuffer: Buffer | undefined
+        try {
+            pdfBuffer = await generateInvoicePdfBuffer(emailData)
+        } catch (pdfErr) {
+            console.error('Failed to generate PDF buffer in send-invoice API:', pdfErr)
+        }
+
+        const emailResult = await emailService.sendInvoiceEmail(emailData, pdfBuffer)
 
         if (!emailResult.success) {
             return res.status(500).json({
