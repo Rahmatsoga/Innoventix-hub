@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
-import puppeteer from 'puppeteer'
+import { getPuppeteerBrowser } from '@/lib/puppeteer'
 import { InvoiceTemplate } from '@/components/InvoiceTemplate'
 import React from 'react'
 import { renderToString } from 'react-dom/server'
@@ -34,14 +34,11 @@ export default async function handler(
       </html>
     `
 
-        // Generate PDF with Puppeteer
-        const browser = await puppeteer.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
-        })
+        // Generate PDF using Serverless Chromium / Puppeteer
+        const browser = await getPuppeteerBrowser()
         const page = await browser.newPage()
 
-        await page.setContent(fullHtml, { waitUntil: 'networkidle0' as any })
+        await page.setContent(fullHtml, { waitUntil: 'domcontentloaded' })
 
         const pdf = await page.pdf({
             format: 'A4',
@@ -62,8 +59,8 @@ export default async function handler(
             `attachment; filename="Invoice-${invoiceData.invoiceNumber || 'draft'}.pdf"`
         )
         res.send(pdf)
-    } catch (error) {
+    } catch (error: any) {
         console.error('PDF Generation Error:', error)
-        res.status(500).json({ error: 'Failed to generate PDF' })
+        res.status(500).json({ error: error.message || 'Failed to generate PDF' })
     }
 }

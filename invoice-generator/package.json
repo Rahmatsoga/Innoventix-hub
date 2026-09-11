@@ -9,12 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@sparticuz/chromium": "^152.0.0",
     "@supabase/supabase-js": "^2.115.0",
     "axios": "^1.20.0",
     "date-fns": "^4.4.0",
     "next": "16.3.4",
     "nodemailer": "^10.0.0",
     "puppeteer": "^25.10.0",
+    "puppeteer-core": "^25.10.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-pdf": "^10.5.0",

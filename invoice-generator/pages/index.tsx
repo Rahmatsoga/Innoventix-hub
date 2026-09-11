@@ -132,7 +132,10 @@ export default function DashboardPage() {
                 body: JSON.stringify(pdfProps)
             })
 
-            if (!response.ok) throw new Error('Failed to generate PDF')
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.error || 'Failed to generate PDF')
+            }
 
             const blob = await response.blob()
             const url = window.URL.createObjectURL(blob)
@@ -146,8 +149,9 @@ export default function DashboardPage() {
 
             setMessage({ type: 'success', text: `Downloaded PDF for #${inv.invoice_number}` })
         } catch (err: any) {
-            console.error('Error downloading PDF:', err)
-            setMessage({ type: 'error', text: err.message || 'Error downloading PDF' })
+            console.error('Error downloading PDF, launching print dialog fallback:', err)
+            window.print()
+            setMessage({ type: 'success', text: `Opened print dialog for #${inv.invoice_number}` })
         } finally {
             setActionLoading(prev => ({ ...prev, [inv.invoice_id!]: null }))
         }

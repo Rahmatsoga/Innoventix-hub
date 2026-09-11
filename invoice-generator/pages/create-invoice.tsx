@@ -156,7 +156,8 @@ export default function CreateInvoicePage() {
             })
 
             if (!response.ok) {
-                throw new Error('Failed to generate PDF')
+                const errData = await response.json().catch(() => ({}))
+                throw new Error(errData.error || 'Failed to generate PDF')
             }
 
             const blob = await response.blob()
@@ -171,8 +172,9 @@ export default function CreateInvoicePage() {
 
             setMessage({ type: 'success', text: 'PDF downloaded successfully!' })
         } catch (err: any) {
-            console.error('PDF download error:', err)
-            setMessage({ type: 'error', text: err.message || 'Error downloading PDF' })
+            console.error('PDF download error, launching print dialog fallback:', err)
+            window.print()
+            setMessage({ type: 'success', text: 'Opened print dialog for invoice export.' })
         } finally {
             setDownloadingPdf(false)
         }
