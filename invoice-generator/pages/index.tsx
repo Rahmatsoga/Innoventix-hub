@@ -179,22 +179,12 @@ export default function DashboardPage() {
                     </div>
                 )}
 
-                {/* Dashboard Hero Banner with Quick Actions */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight">Invoice Dashboard</h1>
-                        <p className="text-blue-100 mt-1 text-sm">
-                            Manage invoices, track payments, and send billing emails to clients.
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                        <Link
-                            href="/clients"
-                            className="px-5 py-2.5 bg-blue-500/30 hover:bg-blue-500/40 text-white font-semibold text-sm rounded-xl border border-white/20 transition flex items-center space-x-2"
-                        >
-                            <span>👥 Manage Clients</span>
-                        </Link>
-                    </div>
+                {/* Dashboard Hero Banner */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg">
+                    <h1 className="text-3xl font-extrabold tracking-tight">Invoice Dashboard</h1>
+                    <p className="text-blue-100 mt-1 text-sm">
+                        Manage invoices, track payments, and send billing emails to clients.
+                    </p>
                 </div>
 
                 {/* Metrics Grid */}
