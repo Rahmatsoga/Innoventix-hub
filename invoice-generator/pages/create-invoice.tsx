@@ -128,16 +128,26 @@ export default function CreateInvoicePage() {
         setDownloadingPdf(true)
 
         try {
-            if (savedInvoice?.invoice_id) {
-                window.open(`/invoice/${savedInvoice.invoice_id}?print=true`, '_blank')
-                setMessage({ type: 'success', text: 'Opened print / PDF view in new window.' })
-            } else {
-                window.print()
-                setMessage({ type: 'success', text: 'Opened print dialog for invoice preview.' })
+            let currentSavedInvoice = savedInvoice
+
+            // Auto-save invoice first if not saved yet
+            if (!currentSavedInvoice || !currentSavedInvoice.invoice_id) {
+                currentSavedInvoice = await handleSaveInvoice()
+                if (!currentSavedInvoice || !currentSavedInvoice.invoice_id) {
+                    setDownloadingPdf(false)
+                    return
+                }
             }
+
+            // Open dedicated isolated print page so form inputs and headers are NEVER printed
+            window.open(`/invoice/${currentSavedInvoice.invoice_id}?print=true`, '_blank')
+            setMessage({
+                type: 'success',
+                text: `Opened clean PDF print view for Invoice #${currentSavedInvoice.invoice_number} in a new tab.`
+            })
         } catch (err: any) {
-            console.error('Print preview error:', err)
-            window.print()
+            console.error('Print view redirect error:', err)
+            setMessage({ type: 'error', text: err.message || 'Failed to open print view.' })
         } finally {
             setDownloadingPdf(false)
         }
