@@ -179,7 +179,7 @@ export default function DashboardPage() {
                     </div>
                 )}
 
-                {/* Dashboard Hero Banner */}
+                {/* Dashboard Hero Banner (Title & Subtitle Only) */}
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white shadow-lg">
                     <h1 className="text-3xl font-extrabold tracking-tight">Invoice Dashboard</h1>
                     <p className="text-blue-100 mt-1 text-sm">
