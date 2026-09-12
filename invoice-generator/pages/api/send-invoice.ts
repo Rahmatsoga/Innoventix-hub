@@ -44,6 +44,8 @@ export default async function handler(
         const subtotal = Number(invoice.subtotal || 0)
         const tax = Number(invoice.tax || 0)
         const total = Number(invoice.amount || subtotal + tax)
+        const rawTaxRate = subtotal > 0 ? (tax / subtotal) * 100 : (client.tax_rate || 0)
+        const taxRate = parseFloat(Number(rawTaxRate).toFixed(2))
         const dueDateFormatted = invoice.due_date
             ? new Date(invoice.due_date).toISOString().split('T')[0]
             : null
@@ -55,6 +57,10 @@ export default async function handler(
             clientName: client.name || 'Valued Client',
             clientEmail: clientEmail,
             amount: invoice.amount,
+            subtotal: subtotal,
+            tax: tax,
+            taxRate: taxRate,
+            tax_rate: taxRate,
             total: total,
             dueDate: dueDateFormatted || undefined,
             lineItems: lineItems

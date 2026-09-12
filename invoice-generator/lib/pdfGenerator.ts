@@ -4,6 +4,10 @@ export interface PdfInvoiceData {
   invoiceNumber: string
   clientName: string
   clientEmail?: string
+  subtotal?: number
+  tax?: number
+  taxRate?: number
+  tax_rate?: number
   total: number
   dueDate?: string
   lineItems?: Array<{
@@ -127,12 +131,15 @@ export async function generateInvoicePdfBuffer(invoice: PdfInvoiceData): Promise
     try { items = JSON.parse(items) } catch (e) { items = [] }
   }
 
+  let calculatedSubtotal = 0
+
   if (Array.isArray(items) && items.length > 0) {
     items.forEach((item) => {
       const desc = item.description || item.name || 'Service / Product'
       const qty = Number(item.quantity || item.qty || 1)
       const rate = Number(item.rate || item.unit_price || item.price || 0)
       const amount = Number(item.amount || item.total || (qty * rate) || 0)
+      calculatedSubtotal += amount
 
       page.drawText(desc.substring(0, 45), { x: 50, y: y, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) })
       page.drawText(String(qty), { x: 330, y: y, size: 9, font: fontRegular, color: rgb(0.3, 0.3, 0.3) })
@@ -151,29 +158,90 @@ export async function generateInvoicePdfBuffer(invoice: PdfInvoiceData): Promise
     })
   }
 
-  y -= 20
+  // Financial summary calculations
+  const subtotal = Number(invoice.subtotal !== undefined ? invoice.subtotal : calculatedSubtotal)
+  const total = Number(invoice.total || subtotal)
+  const tax = Number(invoice.tax !== undefined ? invoice.tax : (total > subtotal ? total - subtotal : 0))
 
-  // Total Summary Box
+  const rawTaxRate = (invoice.taxRate !== undefined)
+    ? Number(invoice.taxRate)
+    : (invoice.tax_rate !== undefined)
+      ? Number(invoice.tax_rate)
+      : (subtotal > 0 && tax > 0 ? (tax / subtotal) * 100 : 0)
+
+  const formattedTaxRate = parseFloat(Number(rawTaxRate).toFixed(2))
+
+  y -= 15
+
+  const rightMarginX = width - 50
+  const summaryBoxWidth = 220
+  const summaryBoxX = width - 40 - summaryBoxWidth
+
+  // 1. Subtotal Row
+  const subtotalStr = `$${subtotal.toFixed(2)}`
+  const subtotalWidth = fontRegular.widthOfTextAtSize(subtotalStr, 10)
+  page.drawText('Subtotal:', {
+    x: summaryBoxX + 10,
+    y: y,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.3, 0.3, 0.3)
+  })
+  page.drawText(subtotalStr, {
+    x: rightMarginX - subtotalWidth,
+    y: y,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.2, 0.2, 0.2)
+  })
+
+  y -= 18
+
+  // 2. Tax Row
+  const taxLabelStr = `Tax (${formattedTaxRate}%):`
+  const taxStr = `$${tax.toFixed(2)}`
+  const taxWidth = fontRegular.widthOfTextAtSize(taxStr, 10)
+  page.drawText(taxLabelStr, {
+    x: summaryBoxX + 10,
+    y: y,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.3, 0.3, 0.3)
+  })
+  page.drawText(taxStr, {
+    x: rightMarginX - taxWidth,
+    y: y,
+    size: 10,
+    font: fontRegular,
+    color: rgb(0.2, 0.2, 0.2)
+  })
+
+  y -= 25
+
+  // 3. Total Due Row (Highlight Box)
   page.drawRectangle({
-    x: width - 240,
-    y: y - 10,
-    width: 200,
-    height: 35,
+    x: summaryBoxX,
+    y: y - 8,
+    width: summaryBoxWidth,
+    height: 32,
     color: rgb(0.94, 0.96, 0.99)
   })
 
+  const totalStr = `$${total.toFixed(2)}`
+  const totalWidth = fontBold.widthOfTextAtSize(totalStr, 13)
+
   page.drawText('Total Due:', {
-    x: width - 230,
+    x: summaryBoxX + 10,
     y: y,
     size: 12,
     font: fontBold,
     color: rgb(0.15, 0.15, 0.15)
   })
 
-  page.drawText(`$${Number(invoice.total || 0).toFixed(2)}`, {
-    x: width - 120,
+  page.drawText(totalStr, {
+    x: rightMarginX - totalWidth,
     y: y,
-    size: 14,
+    size: 13,
     font: fontBold,
     color: rgb(0.145, 0.388, 0.922)
   })

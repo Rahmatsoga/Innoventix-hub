@@ -17,6 +17,10 @@ export interface InvoiceEmailData {
   clientName: string
   clientEmail: string
   amount?: number
+  subtotal?: number
+  tax?: number
+  taxRate?: number
+  tax_rate?: number
   total: number
   dueDate?: string
   lineItems?: any[]
