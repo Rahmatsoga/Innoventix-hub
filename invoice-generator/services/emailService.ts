@@ -204,8 +204,7 @@ export const emailService = {
    * Email template for initial invoice
    */
   getInvoiceEmailTemplate(data: InvoiceEmailData): string {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app';
-    const invoiceId = data.invoiceId || data.invoiceNumber
+    const formattedTotal = `$${Number(data.total).toFixed(2)}`
 
     return `
       <!DOCTYPE html>
@@ -220,24 +219,18 @@ export const emailService = {
             .label { color: #666; font-size: 12px; text-transform: uppercase; }
             .value { font-weight: bold; margin-top: 5px; }
             .total { font-size: 18px; color: #0066cc; margin-top: 10px; }
+            .note { color: #555; font-size: 13px; font-style: italic; margin-top: 15px; }
             .footer { color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; }
           </style>
         </head>
         <body>
           <div class="container">
-            <div class="header">Invoice Ready!</div>
+            <div class="header">Invoice Ready</div>
 
             <div class="section">
               <p>Dear ${data.clientName},</p>
-              <p>Your invoice is ready. You can view, print, or download your PDF invoice directly using the button below:</p>
-            </div>
-
-            <div style="margin: 24px 0; text-align: left;">
-              <a href="${baseUrl}/invoice/${invoiceId}?print=true"
-                 target="_blank"
-                 style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                📄 View & Download PDF Invoice
-              </a>
+              <p>Please find attached your invoice ${data.invoiceNumber} from Innoventix Hub for the amount of ${formattedTotal}.</p>
+              <p class="note">(Your official invoice PDF is attached below).</p>
             </div>
 
             <div class="section">
@@ -245,7 +238,7 @@ export const emailService = {
               <div class="value">${data.invoiceNumber}</div>
               
               <div class="label" style="margin-top: 15px;">Amount Due</div>
-              <div class="value total">$${Number(data.total).toFixed(2)}</div>
+              <div class="value total">${formattedTotal}</div>
 
               ${data.dueDate ? `
                 <div class="label" style="margin-top: 15px;">Due Date</div>
@@ -276,12 +269,11 @@ export const emailService = {
     type: 'reminder_1' | 'overdue',
     reminderCount: number = 1
   ): string {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app';
-    const invoiceId = data.invoiceId || data.invoiceNumber
     const isOverdue = type === 'overdue'
     const heading = isOverdue 
       ? `⚠️ Invoice ${data.invoiceNumber} is OVERDUE`
       : `⏰ Reminder: Invoice ${data.invoiceNumber} due in 8 hours`
+    const formattedTotal = `$${Number(data.total).toFixed(2)}`
 
     return `
       <!DOCTYPE html>
@@ -295,6 +287,7 @@ export const emailService = {
             .section { margin-bottom: 20px; }
             .label { color: #666; font-size: 12px; text-transform: uppercase; }
             .value { font-weight: bold; margin-top: 5px; }
+            .note { color: #555; font-size: 13px; font-style: italic; margin-top: 15px; }
             .footer { color: #999; font-size: 12px; margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; }
           </style>
         </head>
@@ -305,17 +298,10 @@ export const emailService = {
             <div class="section">
               <p>Dear ${data.clientName},</p>
               <p>${isOverdue 
-                ? `Invoice ${data.invoiceNumber} is now overdue and requires immediate payment.`
-                : `This is a friendly reminder that invoice ${data.invoiceNumber} is due in 8 hours.`
+                ? `Invoice ${data.invoiceNumber} from Innoventix Hub for the amount of ${formattedTotal} is now overdue and requires immediate payment.`
+                : `This is a friendly reminder that invoice ${data.invoiceNumber} from Innoventix Hub for the amount of ${formattedTotal} is due in 8 hours.`
               }</p>
-            </div>
-
-            <div style="margin: 24px 0; text-align: left;">
-              <a href="${baseUrl}/invoice/${invoiceId}?print=true"
-                 target="_blank"
-                 style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                📄 View & Download PDF Invoice
-              </a>
+              <p class="note">(Your official invoice PDF is attached below).</p>
             </div>
 
             <div class="section">
@@ -323,7 +309,12 @@ export const emailService = {
               <div class="value">${data.invoiceNumber}</div>
               
               <div class="label" style="margin-top: 15px;">Amount Due</div>
-              <div class="value" style="font-size: 18px; color: ${isOverdue ? '#cc0000' : '#ff9900'};">$${Number(data.total).toFixed(2)}</div>
+              <div class="value" style="font-size: 18px; color: ${isOverdue ? '#cc0000' : '#ff9900'};">${formattedTotal}</div>
+
+              ${data.dueDate ? `
+                <div class="label" style="margin-top: 15px;">Due Date</div>
+                <div class="value">${data.dueDate}</div>
+              ` : ''}
             </div>
 
             <div class="section">
