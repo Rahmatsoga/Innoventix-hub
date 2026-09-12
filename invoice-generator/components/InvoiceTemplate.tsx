@@ -119,7 +119,7 @@ export const InvoiceTemplate: React.FC<InvoiceTemplateProps> = ({
                         <span>${subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between py-2 border-b">
-                        <span>Tax ({taxRate}%):</span>
+                        <span>Tax ({parseFloat(Number(taxRate || 0).toFixed(2))}%):</span>
                         <span>${tax.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between py-3 bg-blue-50 px-3 font-bold text-lg">

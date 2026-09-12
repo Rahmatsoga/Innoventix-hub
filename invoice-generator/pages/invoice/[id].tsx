@@ -84,7 +84,7 @@ export default function InvoicePrintPage() {
     const subtotal = Number(invoice.subtotal || 0)
     const tax = Number(invoice.tax || 0)
     const total = Number(invoice.amount || subtotal + tax)
-    const taxRate = subtotal > 0 ? (tax / subtotal) * 100 : 0
+    const taxRate = subtotal > 0 ? parseFloat(((tax / subtotal) * 100).toFixed(2)) : 0
     const invoiceDate = invoice.sent_at
         ? new Date(invoice.sent_at).toISOString().split('T')[0]
         : new Date().toISOString().split('T')[0]

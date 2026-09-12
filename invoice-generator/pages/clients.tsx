@@ -255,9 +255,9 @@ export default function ClientsPage() {
                                             <td className="py-4 px-6 text-slate-600 font-medium">
                                                 {client.invoice_due_day} Days
                                             </td>
-                                            <td className="py-4 px-6 text-slate-600 font-medium">
-                                                {client.tax_rate}%
-                                            </td>
+                                             <td className="py-4 px-6 text-slate-600 font-medium">
+                                                 {parseFloat(Number(client.tax_rate || 0).toFixed(2))}%
+                                             </td>
                                             <td className="py-4 px-6 text-right">
                                                 <button
                                                     onClick={() => client.client_id && handleDelete(client.client_id)}

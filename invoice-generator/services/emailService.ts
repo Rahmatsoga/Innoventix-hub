@@ -78,9 +78,9 @@ export const emailService = {
     reminderType?: 'initial' | 'reminder_1' | 'overdue' | 'final'
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app'
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app';
       const pdfResponse = await axios.post(
-        `${appUrl}/api/generate-pdf`,
+        `${baseUrl}/api/generate-pdf`,
         invoiceData,
         { responseType: 'arraybuffer' }
       )
@@ -204,7 +204,7 @@ export const emailService = {
    * Email template for initial invoice
    */
   getInvoiceEmailTemplate(data: InvoiceEmailData): string {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app';
     const invoiceId = data.invoiceId || data.invoiceNumber
 
     return `
@@ -233,7 +233,7 @@ export const emailService = {
             </div>
 
             <div style="margin: 24px 0; text-align: left;">
-              <a href="${appUrl}/invoice/${invoiceId}?print=true"
+              <a href="${baseUrl}/invoice/${invoiceId}?print=true"
                  target="_blank"
                  style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
                 📄 View & Download PDF Invoice
@@ -276,7 +276,7 @@ export const emailService = {
     type: 'reminder_1' | 'overdue',
     reminderCount: number = 1
   ): string {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://spectacular-creponne-2dd58d.netlify.app';
     const invoiceId = data.invoiceId || data.invoiceNumber
     const isOverdue = type === 'overdue'
     const heading = isOverdue 
@@ -311,7 +311,7 @@ export const emailService = {
             </div>
 
             <div style="margin: 24px 0; text-align: left;">
-              <a href="${appUrl}/invoice/${invoiceId}?print=true"
+              <a href="${baseUrl}/invoice/${invoiceId}?print=true"
                  target="_blank"
                  style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
                 📄 View & Download PDF Invoice

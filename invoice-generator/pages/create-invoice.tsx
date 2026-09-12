@@ -26,7 +26,7 @@ export default function CreateInvoicePage() {
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
     // Calculate tax rate based on selected client
-    const taxRate = selectedClient?.tax_rate || 0
+    const taxRate = selectedClient?.tax_rate ? parseFloat(Number(selectedClient.tax_rate).toFixed(2)) : 0
 
     // Invoice calculations hook
     const {
