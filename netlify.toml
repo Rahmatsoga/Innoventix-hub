@@ -1,0 +1,7 @@
+[build]
+  base = "invoice-generator"
+  command = "npm run build"
+  publish = "invoice-generator/.next"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
